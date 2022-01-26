@@ -1,0 +1,3 @@
+[[script]]
+namespace = "breeze.contents"
+path = "/root/breeze/monstache_transform.js"
