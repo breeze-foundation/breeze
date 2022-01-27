@@ -111,17 +111,26 @@ mongodump -d breeze -o ~/dump/
 cd dump/breeze/
 zip -r blocks.zip .
 ```
-
 Finally restart node.
 
 ##### If you want to start producing blocks on breeze, your account will need to define a witness key. Generate one into a file with `node src/cli key > witness-key.json`
 
 Follow these simple steps to become witness
-* First enter your username, public witness key, and private witness key at the bottom of the `scripts/start.sh` file, and restart your node.
+* First enter your username, public witness key, and private witness key at the bottom of the `scripts/start.sh` file
+* Give permission to file
+```chmod +x scripts/start.sh```
+* Now start your node
+```./scripts/start.sh```
+
 * Now associate your public witness key with your account by using the on-chain transaction.
 ```bash
 node src/cli enable-node YOUR_WITNESS_PUB_KEY -M YOUR_USERNAME -K YOUR_KEY
 ```
+* Now approve your witness node
+```bash
+node src/cli vote-witness YOUR_WITNESS_USERNAME -M YOUR_USERNAME -K YOUR_KEY
+```
 This transaction must be signed with your master key or a custom key that allows this transaction. Once this step is done, you can head to the [witness](https://besocial.ai/witnesses) and vote yourself.
 Once you get enough votes to be in top witnesses you will start producing blocks regularly and get rewarded for being a witness.
+
 * Finally announce your witnesses node in our social channels and tell users why they should upvote you as witness
