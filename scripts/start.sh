@@ -37,11 +37,11 @@ export LOG_LEVEL=info
 # groups blocks during replay output to lower screen spam
 export REPLAY_OUTPUT=10000
 
-# Rebuild chain state from dump, verifying every block and transactions
+# Rebuild chain state from blocks
 # Do not forget to comment this out after rebuild
 #export REBUILD_STATE=1
 #export REBUILD_WRITE_INTERVAL=10000
-#export REBUILD_NO_VERIFY=1
+#export REBUILD_NO_VALIDATE=1
 
 # default peers to connect with on startup
 export PEERS=
