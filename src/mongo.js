@@ -5,7 +5,6 @@ const fs = require('fs')
 const sha256File = require('sha256-file')
 const spawn = require('child_process').spawn
 const spawnSync = require('child_process').spawnSync
-let isResumingRebuild = !isNaN(parseInt(process.env.REBUILD_RESUME_BLK)) && parseInt(process.env.REBUILD_RESUME_BLK) > 0
 
 var mongo = {
     init: (cb) => {
@@ -25,9 +24,15 @@ var mongo = {
             }
             logr.info('Connected to '+db_url+'/'+this.db.databaseName)
 
+            let state = await this.db.collection('state').findOne({_id: 0})
+
+            // MongoDB init stops here when using blocks BSON store
+            if (process.env.BLOCKS_DIR)
+                return cb(state)
+
             // If a rebuild is specified, drop the database
-            if ((process.env.REBUILD_STATE === '1') && !isResumingRebuild)
-                return db.dropDatabase(() => mongo.initGenesis(cb))
+            if (process.env.REBUILD_STATE === '1' && (!state || !state.headBlock))
+                return db.dropDatabase(() => mongo.initGenesis().then(cb))
 
             // check if genesis block exists or not
             db.collection('blocks').findOne({_id: 0}, function(err, genesis) {
@@ -38,12 +43,12 @@ var mongo = {
                         process.exit(1)
                     }
                     cb()
-                } else mongo.initGenesis(cb)
+                } else mongo.initGenesis().then(cb)
             })
             
         })
     },
-    initGenesis: async (cb) => {
+    initGenesis: async () => {
         if (process.env.REBUILD_STATE === '1')
             logr.info('Starting genesis for rebuild...')
         else
@@ -60,11 +65,8 @@ var mongo = {
         } catch (err) {
             logr.warn('No genesis.zip file found')
             // if no genesis file, we create only the master account and empty block 0
-            mongo.insertMasterAccount(function() {
-                mongo.insertBlockZero(function() {
-                    cb()
-                })
-            })
+            await mongo.insertMasterAccount()
+            await mongo.insertBlockZero()
             return
         }
         
@@ -84,7 +86,7 @@ var mongo = {
 
         await mongo.restore(mongoUri,genesisFolder)
         logr.info('Finished importing genesis data')
-        mongo.insertBlockZero(cb)
+        await mongo.insertBlockZero()
     },
     restore: (mongoUri,folder) => {
         return new Promise((rs) => {
@@ -100,10 +102,10 @@ var mongo = {
             mongorestore.on('close', () => rs(true))
         })
     },
-    insertMasterAccount: (cb) => {
+    insertMasterAccount: async () => {
         // Master account
         logr.info('Inserting new master account: '+config.masterName)
-        db.collection('accounts').insertOne({
+        await db.collection('accounts').insertOne({
             name: config.masterName,
             pub: config.masterPub,
             pub_witness: config.masterPubWitness || config.masterPub,
@@ -125,7 +127,7 @@ var mongo = {
         })
         // Burn account
         logr.info('Inserting new burn account: '+config.burnAccount)
-        db.collection('accounts').insertOne({
+        await db.collection('accounts').insertOne({
             name: config.burnAccount,
             pub: '',
             balance: 0,
@@ -145,7 +147,7 @@ var mongo = {
         })
         // Bridge account
         logr.info('Inserting new bridge account: '+config.bridgeAccount)
-        db.collection('accounts').insertOne({
+        await db.collection('accounts').insertOne({
             name: config.bridgeAccount,
             pub: config.masterPub,
             balance: 0,
@@ -166,7 +168,7 @@ var mongo = {
         // Vaults
         for (let v in config.vaults) {
             logr.info('Inserting new vault account: '+config.vaults[v].name)
-            db.collection('accounts').insertOne({
+            await db.collection('accounts').insertOne({
                 name: config.vaults[v].name,
                 pub: config.masterPub,
                 balance: 0,
@@ -185,21 +187,11 @@ var mongo = {
                 refCount: 0
             })
         }
-        cb()
     },
-    insertBlockZero: (cb) => {
+    insertBlockZero: async () => {
+        if (process.env.BLOCKS_DIR) return
         logr.info('Inserting Block #0 with hash '+config.originHash)
-        db.collection('blocks').findOne({}, function(err, block) {
-            if (err) throw err
-            if (!block) {
-                let genesisBlock = chain.getGenesisBlock()
-                db.collection('blocks').insertOne(genesisBlock, function() {
-                    cb()
-                })
-            } else 
-                cb()
-            
-        })
+        await db.collection('blocks').insertOne(chain.getGenesisBlock())
     },
     addMongoIndexes: async () => {
         await db.collection('accounts').createIndex({name:1})

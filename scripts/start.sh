@@ -10,6 +10,9 @@ export P2P_PORT=6001
 export DB_NAME=breeze
 export DB_URL=mongodb://localhost:27017
 
+# Directory to folder containing blocks.bson file
+export BLOCKS_DIR=
+
 # Peering configuration
 #export OFFLINE=1
 #export NO_DISCOVERY=1
@@ -18,6 +21,7 @@ export DB_URL=mongodb://localhost:27017
 # Enable more modules
 export NOTIFICATIONS=1
 export CONTENTS=1
+#export TX_HISTORY=1
 
 # Cache warmup option
 export WARMUP_ACCOUNTS=100000
@@ -37,7 +41,7 @@ export REPLAY_OUTPUT=10000
 # Do not forget to comment this out after rebuild
 #export REBUILD_STATE=1
 #export REBUILD_WRITE_INTERVAL=10000
-#export REBUILD_RESUME_BLK=
+#export REBUILD_NO_VERIFY=1
 
 # default peers to connect with on startup
 export PEERS=

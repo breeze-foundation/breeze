@@ -8,6 +8,8 @@ const cloneDeep = require('clone-deep')
 const transaction = require('./transaction.js')
 const txtypes = require('./transactions').Types
 const notifications = require('./notifications.js')
+const txHistory = require('./txHistory')
+const blocks = require('./blocks')
 const GrowInt = require('growint')
 const default_replay_output = 100
 const replay_output = process.env.REPLAY_OUTPUT || default_replay_output
@@ -179,7 +181,6 @@ let chain = {
 
                     // process notifications and witness stats (non blocking)
                     notifications.processBlock(newBlock)
-                    witnessStats.processBlock(newBlock)
 
                     // emit event to confirm new transactions in the http api
                     for (let i = 0; i < newBlock.txs.length; i++)
@@ -232,26 +233,29 @@ let chain = {
         }
             
     },
-    addBlock: (block, cb) => {
+    addBlock: async (block, cb) => {
         // add the block in our own db
-        db.collection('blocks').insertOne(block, function(err) {
-            if (err) throw err
-            // push cached accounts and contents to mongodb
-            
-            chain.cleanMemory()
+        if (blocks.isOpen)
+            blocks.appendBlock(block)
+        else
+            await db.collection('blocks').insertOne(block)
 
-            // update the config if an update was scheduled
-            config = require('./config.js').read(block._id)
+        // push cached accounts and contents to mongodb
+        chain.cleanMemory()
 
-            // if block id is mult of n witnesses, reschedule next n blocks
-            if (block._id % config.witnesses === 0)
-                chain.schedule = chain.minerSchedule(block)
-            chain.recentBlocks.push(block)
-            chain.minerWorker(block)
-            chain.output(block)
-            cache.writeToDisk(false)
-            cb(true)
-        })
+        // update the config if an update was scheduled
+        config = require('./config.js').read(block._id)
+        witnessStats.processBlock(block)
+        txHistory.processBlock(block)
+
+        // if block id is mult of n witnesses, reschedule next n blocks
+        if (block._id % config.witnesses === 0)
+            chain.schedule = chain.minerSchedule(block)
+        chain.recentBlocks.push(block)
+        chain.minerWorker(block)
+        chain.output(block)
+        cache.writeToDisk(false)
+        cb(true)
     },
     output: (block,rebuilding) => {
         chain.nextOutputTxs += block.txs.length
@@ -702,12 +706,16 @@ let chain = {
                 delete chain.recentTxs[hash]
     },
     batchLoadBlocks: (blockNum,cb) => {
-        if (chain.blocksToRebuild.length === 0) 
-            db.collection('blocks').find({_id: { $gte: blockNum, $lt: blockNum+max_batch_blocks }}).toArray((e,blocks) => {
-                if (e) throw e
-                if (blocks) chain.blocksToRebuild = blocks
+        if (chain.blocksToRebuild.length === 0)
+            if (blocks.isOpen) {
+                chain.blocksToRebuild = blocks.readRange(blockNum, blockNum+max_batch_blocks-1)
                 cb(chain.blocksToRebuild.shift())
-            })
+            } else
+                db.collection('blocks').find({_id: { $gte: blockNum, $lt: blockNum+max_batch_blocks }}).toArray((e,loadedBlocks) => {
+                    if (e) throw e
+                    if (loadedBlocks) chain.blocksToRebuild = loadedBlocks
+                    cb(chain.blocksToRebuild.shift())
+                })
         else cb(chain.blocksToRebuild.shift())
     },
     rebuildState: (blockNum,cb) => {
@@ -745,6 +753,8 @@ let chain = {
                 // update the config if an update was scheduled
                 config = require('./config.js').read(blockToRebuild._id)
                 chain.cleanMemory()
+                witnessStats.processBlock(blockToRebuild)
+                txHistory.processBlock(blockToRebuild)
 
                 let writeInterval = parseInt(process.env.REBUILD_WRITE_INTERVAL)
                 if (isNaN(writeInterval) || writeInterval < 1)
@@ -758,7 +768,6 @@ let chain = {
                     
                     // process notifications and witness stats (non blocking)
                     notifications.processBlock(blockToRebuild)
-                    witnessStats.processBlock(blockToRebuild)
 
                     // next block
                     chain.rebuildState(blockNum+1, cb)

@@ -2,20 +2,23 @@ module.exports = {
     init: (app) => {
         // transfer history api
         app.get('/transfers/:user/:skip?', (req, res) => {
+            if (process.env.TX_HISTORY !== '1')
+                return res.status(500).send({error: 'TX_HISTORY module is disabled'})
+
             let skip = parseInt(req.params.skip)
             let user = req.params.user
             let ops = [3,13,23]
             let query = {
                 $and: [
                     { $or: [
-                        {'txs.sender': user},
-                        {'txs.data.receiver': user},
+                        {'sender': user},
+                        {'data.receiver': user},
                     ]},
                     { $or: []}
                 ]
             }
             let filter = {
-                sort: {_id: -1},
+                sort: {includedInBlock: -1},
                 limit: 50
             }
 
@@ -25,14 +28,11 @@ module.exports = {
             if (!isNaN(skip) && skip > 0)
                 filter.skip = skip
     
-            db.collection('blocks').find(query, filter).toArray(function(err, blocks) {
-                let txs = []
-                for (let b = 0; b < blocks.length; b++)
-                    for (let t = 0; t < blocks[b].txs.length; t++)
-                        if ((blocks[b].txs[t].sender === user
-                        || blocks[b].txs[t].data.receiver === user)
-                        && ops.includes(blocks[b].txs[t].type))
-                            txs.push(blocks[b].txs[t])
+            db.collection('txs').find(query, filter).toArray(function(err, txs) {
+                if (err || !txs)
+                    return res.status(500).send({error: 'failed to query account history'})
+                for (let t = 0; t < txs.length; t++)
+                    delete txs[t]._id
                 res.send(txs)
             })
         })
