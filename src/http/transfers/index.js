@@ -23,7 +23,7 @@ module.exports = {
             }
 
             for (let i in ops)
-                query['$and'][1]['$or'].push({'txs.type': ops[i]})
+                query['$and'][1]['$or'].push({'type': ops[i]})
             
             if (!isNaN(skip) && skip > 0)
                 filter.skip = skip
