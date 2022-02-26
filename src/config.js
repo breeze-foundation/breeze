@@ -48,6 +48,8 @@ var config = {
             ecoCurationVtBase: 50,
             // incremental vp multiplier for following votes within a 24 hour window
             ecoCurationVtMult: 1.33,
+            // economy revision
+            ecoVersion: 1,
             // the maximum number of follows a single account can do
             followsMax: 2000,
             // the max size of a stringified json input (content / user profile)
@@ -143,6 +145,46 @@ var config = {
             vpGrowth: 120000000000, // +1 VP per 2 minutes per Token (60 * 1000 * 1000000 * 2min)
             // hard cap on maximum VP an account can have
             vpMax: 16000
+        },
+        5000000: {
+            // fixed emissions at 0.3 Token/block
+            ecoVersion: 2,
+            ecoAuthorReward: 36000,
+            ecoCurationReward: 24000,
+            vaults: {
+                airdrop: {
+                    // airdrop rewards for authors with no ref defined
+                    name: 'breeze-airdrop',
+                    reward: 6000 // 0.006 Token
+                },
+                lpMining: {
+                    // LP mining rewards
+                    name: 'breeze-lpminer',
+                    reward: 90000 // 0.09 Token
+                },
+                staking: {
+                    // staking rewards
+                    name: 'breeze-staker',
+                    reward: 60000 // 0.06 Token
+                },
+                daf: {
+                    // development appraisal fund
+                    name: 'breeze-daf',
+                    reward: 6000 // 0.006 Token
+                },
+                dao: {
+                    // dao fund
+                    name: 'breeze-dao',
+                    reward: 30000 // 0.03 Token
+                },
+                charity: {
+                    // charity share
+                    name: 'breeze-charity',
+                    reward: 3000 // 0.003 Token
+                }
+            },
+            witnessReward: 3000,
+            witnessRewardBlocks: 15, // 0.045 Token over last 15 witnesses, 0.003 each
         }
     },
     read: (blockNum) => {

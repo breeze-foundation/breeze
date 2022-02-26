@@ -35,6 +35,18 @@ module.exports = {
             ts: ts,
             vp: await transaction.nextVP(tx.sender,ts,-1)
         }
-        eco.curation(tx.data.author, tx.data.link, vote, () => cb(true))
+        if (config.ecoVersion === 1) {
+            eco.curation(tx.data.author, tx.data.link, vote, () => cb(true))
+        } else if (config.ecoVersion === 2) {
+            if (!eco.currentBlock.votes[tx.data.author])
+                eco.currentBlock.votes[tx.data.author] = {}
+            if (!eco.currentBlock.votes[tx.data.author][tx.data.link])
+                eco.currentBlock.votes[tx.data.author][tx.data.link] = [vote]
+            else
+                eco.currentBlock.votes[tx.data.author][tx.data.link].push(vote)
+            eco.currentBlock.voteCount++
+            eco.currentBlock.vpCount += vote.vp
+            cb(true)
+        }
     }
 }
