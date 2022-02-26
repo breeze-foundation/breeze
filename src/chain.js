@@ -157,17 +157,16 @@ let chain = {
     validateAndAddBlock: (newBlock, revalidate, cb) => {
         // when we receive an outside block and check whether we should add it to our chain or not
         if (chain.shuttingDown) return
-        chain.isValidNewBlock(newBlock, revalidate, revalidate, function(isValid) {
+        chain.isValidNewBlock(newBlock, revalidate, false, function(isValid) {
             if (!isValid) {
                 logr.error('Invalid block')
                 cb(true, newBlock); return
             }
             // straight execution
-            chain.executeBlockTransactions(newBlock, false, true, function(validTxs) {
+            chain.executeBlockTransactions(newBlock, revalidate, true, function(validTxs) {
                 // if any transaction is wrong, thats a fatal error
-                // transactions should have been verified in isValidNewBlock
                 if (newBlock.txs.length !== validTxs.length) {
-                    logr.fatal('Invalid tx(s) in block found after starting execution')
+                    logr.error('Invalid tx(s) in block')
                     cb(true, newBlock); return
                 }
 
