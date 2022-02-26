@@ -49,7 +49,7 @@ var eco = {
         let dists = {}
         let ops = []
         for (let au in eco.currentBlock.votes)
-            for (let li in eco.currentBlock.votes[a]) {
+            for (let li in eco.currentBlock.votes[au]) {
                 let a = au
                 let l = li
                 // author reward for post
@@ -97,6 +97,16 @@ var eco = {
             }
         for (let d in dists)
             ops.push(eco.incBalanceOp2(d,dists[d],ts))
+        for (let v in config.vaults)
+            if (config.vaults[v].reward > 0 && v !== 'airdrop') {
+                ops.push(eco.incBalanceOp2(config.vaults[v].name,config.vaults[v].reward,ts))
+                ops.push((callback) => cache.insertOne('distributed', {
+                    name: config.vaults[v].name,
+                    dist: config.vaults[v].reward,
+                    ts: ts,
+                    _id: ts+'/'+v
+                },() => callback()))
+            }
         if (ops.length > 0)
             series(ops,() => {
                 eco.complete()
@@ -160,7 +170,7 @@ var eco = {
         return (callback) => {
             cache.findOne('accounts', {name: author}, (err,authorAcc) => {
                 let refReceipient = authorAcc.ref ? authorAcc.ref : config.vaults.airdrop.name
-                let amt = Math.floor(ad*config.ecoAuthorReward/config.vaults.airdrop.reward)
+                let amt = Math.floor(ad*config.vaults.airdrop.reward/config.ecoAuthorReward)
                 cache.insertOne('distributed', {
                     name: refReceipient,
                     dist: amt,
