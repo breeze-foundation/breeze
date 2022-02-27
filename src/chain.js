@@ -630,7 +630,7 @@ let chain = {
         let witnessRewardReceipients = {}
         let firstIndex = Math.max(0,chain.recentBlocks.length - config.witnessRewardBlocks + 1) // last n producers + current producer
         if (config.ecoVersion === 1)
-            reward *= votes
+            reward *= voteCount
         for (let i = firstIndex; i < chain.recentBlocks.length; i++) 
             if (!witnessRewardReceipients[chain.recentBlocks[i].miner])
                 witnessRewardReceipients[chain.recentBlocks[i].miner] = reward
