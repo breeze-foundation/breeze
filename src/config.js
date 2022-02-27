@@ -148,6 +148,7 @@ var config = {
         },
         5000000: {
             // fixed emissions at 0.3 Token/block
+            accountMinLengthFeelessMaster: 1,
             ecoVersion: 2,
             ecoAuthorReward: 36000,
             ecoCurationReward: 24000,
