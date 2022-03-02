@@ -516,7 +516,7 @@ let chain = {
         // revalidating transactions in orders if revalidate = true
         // adding transaction to recent transactions (to prevent tx re-use) if isFinal = true
         var executions = []
-        let votes = 0 // for witness reward calculation
+        let voteCount = 0 // for witness reward calculation
         let executedSuccessfully = []
         for (let i = 0; i < block.txs.length; i++) 
             executions.push(function(callback) {
@@ -530,7 +530,7 @@ let chain = {
                                     process.exit(1)
                                 }
                                 if (tx.type === txtypes.VOTE)
-                                    votes++
+                                    voteCount++
                                 if (isFinal)
                                     chain.recentTxs[tx.hash] = tx
                                 if (executed)
@@ -547,7 +547,7 @@ let chain = {
                         if (!executed)
                             logr.fatal('Tx execution failure', tx)
                         if (tx.type === txtypes.VOTE)
-                            votes++
+                            voteCount++
                         if (isFinal)
                             chain.recentTxs[tx.hash] = tx
                         if (executed)
@@ -564,8 +564,8 @@ let chain = {
             logr.debug('Block '+string+' in '+(new Date().getTime()-blockTimeBefore)+'ms')
             if (err) throw err
 
-            // add rewards for the witness who mined this block
-            chain.witnessRewards(block.miner, block.timestamp, votes, () => cb(executedSuccessfully))
+            // process curations and witness rewards
+            eco.curationv2(block.timestamp,() => chain.witnessRewards(block.miner, block.timestamp, voteCount, () => cb(executedSuccessfully)))
         })
     },
     minerSchedule: (block) => {
@@ -621,14 +621,16 @@ let chain = {
         })
         return witnesses.slice(start, limit)
     },
-    witnessRewards: (name, ts, votes, cb) => {
-        // rewards witnesses who produced in the last config.witnessReward blocks with 0.01 Token/producer
-        if (votes <= 0)
+    witnessRewards: (name, ts, voteCount, cb) => {
+        // rewards witnesses who produced in the last config.witnessRewardBlocks with config.witnessReward Token/producer
+        if (voteCount <= 0)
             return cb(0)
-        let reward = config.witnessReward * votes
+        let reward = config.witnessReward
         let witnessRewardOp = []
         let witnessRewardReceipients = {}
-        let firstIndex = Math.max(0,chain.recentBlocks.length - config.witnessRewardBlocks + 1) // last 10 producers + current producer
+        let firstIndex = Math.max(0,chain.recentBlocks.length - config.witnessRewardBlocks + 1) // last n producers + current producer
+        if (config.ecoVersion === 1)
+            reward *= voteCount
         for (let i = firstIndex; i < chain.recentBlocks.length; i++) 
             if (!witnessRewardReceipients[chain.recentBlocks[i].miner])
                 witnessRewardReceipients[chain.recentBlocks[i].miner] = reward
