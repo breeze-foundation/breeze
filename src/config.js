@@ -146,7 +146,7 @@ var config = {
             // hard cap on maximum VP an account can have
             vpMax: 16000
         },
-        5000000: {
+        1000000: {
             // fixed emissions at 0.3 Token/block
             accountMinLengthFeelessMaster: 1,
             ecoVersion: 2,
