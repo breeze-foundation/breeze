@@ -20,7 +20,7 @@ Breeze token will be linked to other chains via wrapped token and bridges.
 
 ## Economy
 Breeze token economy is super simple. It has been designed in a way that every contributing member of community get rewarded. Every generated token is distributed like this:
-10% authors - 5% Curators - 5% Affiliate/Airdrop - 11% witnesses - 30% LP Mining - 25% Staking - 3% DAF (developer appraisal fund) - 1% Charity - 10% DAO
+12% authors - 8% Curators - 2% Affiliate/Airdrop - 15% witnesses - 30% LP Mining - 20% Staking - 2% DAF (developer appraisal fund) - 1% Charity - 10% DAO
 
 ## Documentation
 * For Developers [dev docs](https://breezechain.org)
@@ -33,15 +33,15 @@ Breeze token economy is super simple. It has been designed in a way that every c
 
 ## Help
 For any help get in touch with us on our social media channels
-* [Telegram](https://t.me/besocial_ai)
-* [Twitter](https://twitter.com/besocial_ai)
+* [Telegram](https://t.me/tipmeacoffee)
+* [Twitter](https://twitter.com/tipmeacoffee)
 * [Discord](https://discord.gg/eMfdUbkYHu)
 
 
 ## Network Links
 * [Breeze Foundation](https://breeze.foundation)
-* [Besocial](https://besocial.ai)
-* [TMAC (Tip Me A Coffee)](https://tmac.finance)
+* [TipMeACoffee](https://tipmeacoffee.com)
+* [TMAC Finance](https://tmac.finance)
 * [Explorer](https://breezescan.io)
 
 ## No Support & No Warranty
