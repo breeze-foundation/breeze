@@ -87,12 +87,15 @@ var eco = {
 
                 // update post info
                 ops.push((callback) => cache.findOne('contents',{_id:a+'/'+l},(e,c) => {
-                    for (let v in eco.currentBlock.votes[a][l])
-                        c.votes.push(eco.currentBlock.votes[a][l][v])
-                    cache.updateOne('contents',{_id:a+'/'+l},{
-                        $set: { votes: c.votes },
+                    let contentOp = {
                         $inc: { dist: ad + cdt, likes: eco.currentBlock.votes[a][l].length }
-                    },() => callback())
+                    }
+                    if (!config.hotfix1) {
+                        for (let v in eco.currentBlock.votes[a][l])
+                            c.votes.push(eco.currentBlock.votes[a][l][v])
+                        contentOp.$set = { votes: c.votes }
+                    }
+                    cache.updateOne('contents',{_id:a+'/'+l},contentOp,() => callback())
                 }))
             }
         for (let d in dists)

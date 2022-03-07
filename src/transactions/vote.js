@@ -46,7 +46,11 @@ module.exports = {
                 eco.currentBlock.votes[tx.data.author][tx.data.link].push(vote)
             eco.currentBlock.voteCount++
             eco.currentBlock.vpCount += vote.vp
-            cb(true)
+            if (!config.hotfix1)
+                return cb(true)
+            cache.updateOne('contents', {_id: author+'/'+link}, {
+                $push: { votes: vote }
+            },() => cb(true))
         }
     }
 }
