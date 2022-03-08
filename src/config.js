@@ -187,7 +187,7 @@ var config = {
             witnessReward: 3000,
             witnessRewardBlocks: 15, // 0.045 Token over last 15 witnesses, 0.003 each
         },
-        2000000: {
+        1170000: {
             hotfix1: true
         }
     },
