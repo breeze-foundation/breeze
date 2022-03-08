@@ -48,7 +48,7 @@ module.exports = {
             eco.currentBlock.vpCount += vote.vp
             if (!config.hotfix1)
                 return cb(true)
-            cache.updateOne('contents', {_id: author+'/'+link}, {
+            cache.updateOne('contents', {_id: tx.data.author+'/'+tx.data.link}, {
                 $push: { votes: vote }
             },() => cb(true))
         }
