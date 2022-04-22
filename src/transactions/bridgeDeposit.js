@@ -34,6 +34,7 @@ module.exports = {
             sender: tx.sender,
             ts: ts
         }
-        cache.insertOne('bridge',{_id: tx.hash, ts: ts, direction: 0, src: tx.sender, dest: tx.data.destaddr, network: tx.data.network, amount: tx.data.amount, status: 0}, () => require('./transfer').execute(transferOp,ts,() => cb(true)))
+        let bridgeFee = Math.ceil((tx.data.amount * config.bridgeFeeBp) / 10000)
+        cache.insertOne('bridge',{_id: tx.hash, ts: ts, direction: 0, src: tx.sender, dest: tx.data.destaddr, network: tx.data.network, fee: bridgeFee, amount: tx.data.amount, status: 0}, () => require('./transfer').execute(transferOp,ts,() => cb(true)))
     },
 }

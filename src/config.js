@@ -24,6 +24,8 @@ let config = {
             blockTime: 3000,
             // bridge account username
             bridgeAccount: 'bridge',
+            // bridge deposit fee (in basis points percentage)
+            bridgeFeeBp: 0,
             // burn account username
             burnAccount: 'null',
             // the number of ms needed for 0.000001 Token to generate 1 byte of bw
@@ -193,7 +195,8 @@ let config = {
             hotfix1: true
         },
         7000000: {
-            blockHashSerialization: 2
+            blockHashSerialization: 2,
+            bridgeFeeBp: 100,
         }
     },
     read: (blockNum) => {
