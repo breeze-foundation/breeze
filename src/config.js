@@ -18,6 +18,8 @@ var config = {
             b58Alphabet: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
             // the block #0 genesis timestamp
             block0ts: 1621522223702,
+            // the block hash serialization revision
+            blockHashSerialization: 1,
             // the block time in ms
             blockTime: 3000,
             // bridge account username
@@ -189,6 +191,9 @@ var config = {
         },
         1282080: {
             hotfix1: true
+        },
+        7000000: {
+            blockHashSerialization: 2
         }
     },
     read: (blockNum) => {

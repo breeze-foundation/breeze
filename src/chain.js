@@ -16,15 +16,13 @@ const replay_output = process.env.REPLAY_OUTPUT || default_replay_output
 const max_batch_blocks = 10000
 
 class Block {
-    constructor(index, phash, timestamp, txs, miner, missedBy, dist, burn, signature, hash) {
+    constructor(index, phash, timestamp, txs, miner, missedBy, signature, hash) {
         this._id = index
         this.phash = phash.toString()
         this.timestamp = timestamp
         this.txs = txs
         this.miner = miner
         if (missedBy) this.missedBy = missedBy
-        if (dist) this.dist = dist
-        if (burn) this.burn = burn
         this.hash = hash
         this.signature = signature
     }
@@ -97,7 +95,7 @@ let chain = {
         var nextHash = chain.calculateHash(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, block.distributed, block.burned)
         var signature = secp256k1.ecdsaSign(Buffer.from(nextHash, 'hex'), bs58.decode(process.env.NODE_OWNER_PRIV))
         signature = bs58.encode(signature.signature)
-        return new Block(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, block.distributed, block.burned, signature, nextHash)
+        return new Block(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, signature, nextHash)
         
     },
     canMineBlock: (cb) => {
@@ -373,7 +371,7 @@ let chain = {
     },
     isValidHashAndSignature: (newBlock, cb) => {
         // and that the hash is correct
-        var theoreticalHash = chain.calculateHashForBlock(newBlock)
+        let theoreticalHash = chain.calculateHashForBlock(newBlock,true)
         if (theoreticalHash !== newBlock.hash) {
             logr.debug(typeof (newBlock.hash) + ' ' + typeof theoreticalHash)
             logr.error('invalid hash: ' + theoreticalHash + ' ' + newBlock.hash)
@@ -668,14 +666,22 @@ let chain = {
             })
         })
     },
-    calculateHashForBlock: (block) => {
-        return chain.calculateHash(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, block.dist, block.burn)
+    calculateHashForBlock: (block,deleteExisting) => {
+        if (config.blockHashSerialization === 1)
+            return chain.calculateHashV1(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy)
+        else if (config.blockHashSerialization === 2) {
+            let clonedBlock
+            if (deleteExisting) {
+                clonedBlock = cloneDeep(block)
+                delete clonedBlock.hash
+                delete clonedBlock.signature
+            }
+            return CryptoJS.SHA256(JSON.stringify(deleteExisting ? clonedBlock : block)).toString()
+        }
     },
-    calculateHash: (index, phash, timestamp, txs, miner, missedBy, distributed, burned) => {
+    calculateHashV1: (index, phash, timestamp, txs, miner, missedBy) => {
         var string = index + phash + timestamp + txs + miner
         if (missedBy) string += missedBy
-        if (distributed) string += distributed
-        if (burned) string += burned
 
         return CryptoJS.SHA256(string).toString()
     },    
