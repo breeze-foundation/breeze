@@ -2,10 +2,26 @@ var GrowInt = require('growint')
 var CryptoJS = require('crypto-js')
 const { EventEmitter } = require('events')
 const cloneDeep = require('clone-deep')
-
+const bson = require('bson')
 var Transaction = require('./transactions')
 var TransactionType = Transaction.Types
 var max_mempool = process.env.MEMPOOL_SIZE || 200
+
+// transaction types with arbitrary string input that requires bson serialization validation
+const serializeValidation = [
+    TransactionType.TRANSFER,
+    TransactionType.COMMENT,
+    TransactionType.VOTE,
+    TransactionType.USER_JSON,
+    TransactionType.NEW_KEY,
+    TransactionType.ENABLE_NODE,
+    TransactionType.NEW_WEIGHTED_KEY,
+    TransactionType.BRIDGE_DEPOSIT,
+    TransactionType.BRIDGE_UPDATE_TX,
+    TransactionType.BRIDGE_WITHDRAW,
+    TransactionType.CATEGORY_FOLLOW,
+    TransactionType.CATEGORY_UNFOLLOW
+]
 
 transaction = {
     pool: [], // the pool holds temporary txs that havent been published on chain yet
@@ -116,6 +132,14 @@ transaction = {
         delete newTx.hash
         if (CryptoJS.SHA256(JSON.stringify(newTx)).toString() !== tx.hash) {
             cb(false, 'invalid tx hash does not match'); return
+        }
+        // ensure nothing gets lost when serialized in bson
+        // skipped during replays or rebuilds
+        if (!p2p.recovering && chain.getLatestBlock()._id > chain.restoredBlocks && serializeValidation.includes(tx.type)) {
+            let bsonified = bson.deserialize(bson.serialize(newTx))
+            let bsonifiedHash = CryptoJS.SHA256(JSON.stringify(bsonified)).toString()
+            if (computedHash !== bsonifiedHash)
+                return cb(false, 'unserializable transaction, perhaps due to non-utf8 character?')
         }
         // checking transaction signature
         chain.isValidSignature(tx.sender, tx.type, tx.hash, tx.signature, function(legitUser) {
