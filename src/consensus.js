@@ -1,6 +1,6 @@
-var secp256k1 = require('secp256k1')
-var CryptoJS = require('crypto-js')
-var bs58 = require('base-x')(config.b58Alphabet)
+const secp256k1 = require('secp256k1')
+const CryptoJS = require('crypto-js')
+const bs58 = require('base-x')(config.b58Alphabet)
 const cloneDeep = require('clone-deep')
 const consensus_need = 2
 const consensus_total = 3
@@ -8,7 +8,7 @@ const consensus_threshold = consensus_need/consensus_total
 
 // all p2p.sockets referenced here are verified nodes with a node_status
 
-var consensus = {
+let consensus = {
     observer: false,
     validating: [],
     processed: [],
@@ -16,7 +16,7 @@ var consensus = {
     finalizing: false,
     possBlocks: [],
     getActiveWitnessKey: (name) => {
-        var shuffle = chain.schedule.shuffle
+        let shuffle = chain.schedule.shuffle
         for (let i = 0; i < shuffle.length; i++)
             if (shuffle[i].name === name)
                 return shuffle[i].pub_witness
@@ -25,7 +25,7 @@ var consensus = {
     isActive: () => {
         if (consensus.observer)
             return false
-        var thPub = consensus.getActiveWitnessKey(process.env.NODE_OWNER)
+        let thPub = consensus.getActiveWitnessKey(process.env.NODE_OWNER)
         if (!thPub) {
             logr.info(process.env.NODE_OWNER+' is not elected, defaulting to observer')
             consensus.observer = true
@@ -42,9 +42,9 @@ var consensus = {
         // the real active witnesses are those who can mine or backup this block
         // i.e. a new witness only enters consensus on the block he gets scheduled for
         // and out of consensus 2*config.witnesses blocks after his last scheduled block
-        var blockNum = chain.getLatestBlock()._id+1
-        var actives = []
-        var currentWitness = chain.schedule.shuffle[(blockNum-1)%config.witnesses].name
+        let blockNum = chain.getLatestBlock()._id+1
+        let actives = []
+        let currentWitness = chain.schedule.shuffle[(blockNum-1)%config.witnesses].name
         if (consensus.getActiveWitnessKey(currentWitness))
             actives.push(currentWitness)
 
@@ -58,8 +58,8 @@ var consensus = {
         return actives
     },
     tryNextStep: () => {
-        var consensus_size = consensus.activeWitnesses().length
-        var threshold = consensus_size * consensus_threshold
+        let consensus_size = consensus.activeWitnesses().length
+        let threshold = consensus_size * consensus_threshold
 
         // if we are observing, we need +1 to pass consensus as we want to manage our own rounds
         if (!consensus.isActive())
@@ -115,7 +115,7 @@ var consensus = {
                     if (err) throw err
 
                     // clean up old possible blocks
-                    var newPossBlocks = []
+                    let newPossBlocks = []
                     for (let y = 0; y < consensus.possBlocks.length; y++) 
                         if (possBlock.block._id < consensus.possBlocks[y].block._id)
                             newPossBlocks.push(consensus.possBlocks[y])
@@ -167,7 +167,7 @@ var consensus = {
             consensus.validating.push(block.hash)
 
             // its a new possible block, set up the empty possible block
-            var possBlock = {
+            let possBlock = {
                 block:block
             }
             for (let r = 0; r < config.consensusRounds; r++)
@@ -226,12 +226,12 @@ var consensus = {
         if (consensus.isActive()) {
             // signing and broadcast to our peers
             // only if we are an active witness
-            var onlyBlockHash = {
+            let onlyBlockHash = {
                 hash: block.hash
             }
             if (block.miner === process.env.NODE_OWNER && round === 0)
                 onlyBlockHash = block
-            var signed = consensus.signMessage({t:6, d:{r:round, b: onlyBlockHash, ts: new Date().getTime()}})
+            let signed = consensus.signMessage({t:6, d:{r:round, b: onlyBlockHash, ts: new Date().getTime()}})
             p2p.broadcast(signed)
         }
 
@@ -239,9 +239,9 @@ var consensus = {
         consensus.tryNextStep()
     },
     remoteRoundConfirm: (message) => {
-        var block = message.d.b
-        var round = message.d.r
-        var witness = message.s.n
+        let block = message.d.b
+        let round = message.d.r
+        let witness = message.s.n
         
         for (let i = 0; i < consensus.possBlocks.length; i++) 
             if (block.hash === consensus.possBlocks[i].block.hash) {
@@ -259,8 +259,8 @@ var consensus = {
             }       
     },
     signMessage: (message) => {
-        var hash = CryptoJS.SHA256(JSON.stringify(message)).toString()
-        var signature = secp256k1.ecdsaSign(Buffer.from(hash, 'hex'), bs58.decode(process.env.NODE_OWNER_PRIV))
+        let hash = CryptoJS.SHA256(JSON.stringify(message)).toString()
+        let signature = secp256k1.ecdsaSign(Buffer.from(hash, 'hex'), bs58.decode(process.env.NODE_OWNER_PRIV))
         signature = bs58.encode(signature.signature)
         message.s = {
             n: process.env.NODE_OWNER,
@@ -273,12 +273,12 @@ var consensus = {
             cb(false)
             return
         }
-        var sign = message.s.s
-        var name = message.s.n
-        var tmpMess = cloneDeep(message)
+        let sign = message.s.s
+        let name = message.s.n
+        let tmpMess = cloneDeep(message)
         delete tmpMess.s
-        var hash = CryptoJS.SHA256(JSON.stringify(tmpMess)).toString()
-        var pub = consensus.getActiveWitnessKey(name)
+        let hash = CryptoJS.SHA256(JSON.stringify(tmpMess)).toString()
+        let pub = consensus.getActiveWitnessKey(name)
         if (pub && secp256k1.ecdsaVerify(
             bs58.decode(sign),
             Buffer.from(hash, 'hex'),

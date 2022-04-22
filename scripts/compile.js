@@ -1,21 +1,21 @@
 const spawn = require('child_process').spawn
 
-var nodeVersion = 10
-var outPath = 'bin'
+let nodeVersion = 10
+let outPath = 'bin'
 
-var platform = process.platform
+let platform = process.platform
 if (platform === 'win32')
     platform = 'win'
 if (platform === 'darwin')
     platform = 'macos'
 
-var arch = process.arch
+let arch = process.arch
 if (arch === 'x32')
     arch = 'x86'
 
-var target = 'node'+nodeVersion+'-'+platform+'-'+arch
+let target = 'node'+nodeVersion+'-'+platform+'-'+arch
 console.log('Compiling breeze for '+target)
-var cmd = 'src/cli.js --output '+outPath+'/breeze --targets '+target
+let cmd = 'src/cli.js --output '+outPath+'/breeze --targets '+target
 
 const compile_cli = spawn('pkg', cmd.split(' '))
 compile_cli.stdout.on('data', function (data) {

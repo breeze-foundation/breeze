@@ -6,7 +6,7 @@ const sha256File = require('sha256-file')
 const spawn = require('child_process').spawn
 const spawnSync = require('child_process').spawnSync
 
-var mongo = {
+let mongo = {
     init: (cb) => {
         MongoClient.connect(db_url, {
             useNewUrlParser: true,

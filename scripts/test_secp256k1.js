@@ -1,16 +1,16 @@
 const randomBytes = require('randombytes')
 const secp256k1 = require('secp256k1')
 const bs58 = require('bs58')
-var CryptoJS = require('crypto-js')
+const CryptoJS = require('crypto-js')
 const { performance } = require('perf_hooks')
 
 const iterations = parseInt(process.argv[2])
 let timeDiff = null
-var startTime = performance.now()
+let startTime = performance.now()
 console.log('Iterations = '+iterations+'\n')
 
 function output(type, n) {
-    var outputs = [1, 10, 100, 1000, 10000, 100000, 1000000]
+    let outputs = [1, 10, 100, 1000, 10000, 100000, 1000000]
     if (outputs.indexOf(n) === -1) return
 
     timeDiff = performance.now()-startTime
@@ -46,15 +46,15 @@ function sign(privKey, sender, tx) {
     // hash the transaction
     tx.hash = CryptoJS.SHA256(JSON.stringify(tx)).toString()
     // sign the transaction
-    var signature = secp256k1.ecdsaSign(Buffer.from(tx.hash, 'hex'), bs58.decode(privKey))
+    let signature = secp256k1.ecdsaSign(Buffer.from(tx.hash, 'hex'), bs58.decode(privKey))
     tx.signature = bs58.encode(signature.signature)
     return tx
 }
 
 function verify(tx) {
-    var bufferHash = Buffer.from(tx.hash, 'hex')
-    var b58sign = bs58.decode(tx.signature)
-    var b58pub = bs58.decode(tx.testPub)
+    let bufferHash = Buffer.from(tx.hash, 'hex')
+    let b58sign = bs58.decode(tx.signature)
+    let b58pub = bs58.decode(tx.testPub)
     if (secp256k1.ecdsaVerify(b58sign, bufferHash, b58pub)) {
         // all good
     } else

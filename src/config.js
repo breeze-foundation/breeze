@@ -1,4 +1,4 @@
-var config = {
+let config = {
     history: {
         0: {
             // this is the block 0 configuration for mainnet
@@ -197,7 +197,7 @@ var config = {
         }
     },
     read: (blockNum) => {
-        var finalConfig = {}
+        let finalConfig = {}
         for (const key in config.history) 
             if (blockNum >= key) {
                 if (blockNum === parseInt(key) && blockNum !== 0)

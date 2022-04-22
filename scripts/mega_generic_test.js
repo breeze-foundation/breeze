@@ -1,23 +1,20 @@
-var javalon = require('javalon')
+const javalon = require('javalon')
 javalon.init({api: 'http://127.0.0.1:3001',
     bwGrowth: 3600000,
     vpGrowth: 6000000})
-var Chance = require('chance')
-var chance = new Chance()
-var MongoClient = require('mongodb').MongoClient
+const Chance = require('chance')
+let chance = new Chance()
+let MongoClient = require('mongodb').MongoClient
 
-var start_account = 50
-var starting_dtc = 33333333
-var tpups = 0.01
-var wait = 8000
-var master_pub = 'dTuBhkU6SUx9JEx1f4YEt34X9sC7QGso2dSrqE8eJyfz'
-var master_wif = '34EpMEDFJwKbxaF7FhhLyEe3AhpM4dwHMLVfs4JyRto5'
-var master_name = 'breeze'
-var accounts = []
-var contents = []
-var beggars = []
-var startTime = null
-var successes = 0
+let tpups = 0.01
+let master_pub = 'dTuBhkU6SUx9JEx1f4YEt34X9sC7QGso2dSrqE8eJyfz'
+let master_wif = '34EpMEDFJwKbxaF7FhhLyEe3AhpM4dwHMLVfs4JyRto5'
+let master_name = 'breeze'
+let accounts = []
+let contents = []
+let beggars = []
+let startTime = null
+let successes = 0
 
 MongoClient.connect('mongodb://localhost:27017', { useNewUrlParser: true }, function(err, client) {
     this.db = client.db('breeze')
@@ -41,7 +38,7 @@ MongoClient.connect('mongodb://localhost:27017', { useNewUrlParser: true }, func
 // }, wait)
 
 function foreverDo() {
-    var time = 1000/(tpups*accounts.length)
+    let time = 1000/(tpups*accounts.length)
     setTimeout(function() {
         genericActivity()
         foreverDo()
@@ -50,8 +47,8 @@ function foreverDo() {
 
 function createMassAccs(nAcc) {
     // generate random usernames
-    var names = []
-    var i=0
+    let names = []
+    let i=0
     while (i<nAcc) {
         names.push(chance.name().toLowerCase().replace(' ', '-'))
         i++
@@ -59,7 +56,7 @@ function createMassAccs(nAcc) {
 
     // create accounts
     for (let i = 0; i < names.length; i++) {
-        var tx = {
+        let tx = {
             type: javalon.TransactionType.NEW_ACCOUNT,
             data: {
                 name: names[i],
@@ -77,7 +74,7 @@ function createMassAccs(nAcc) {
 
 function depositMoney(amount) {
     for (let i = 0; i < accounts.length; i++) {
-        var tx = {
+        let tx = {
             type: javalon.TransactionType.TRANSFER,
             data: {
                 receiver: accounts[i],
@@ -94,7 +91,7 @@ function depositMoney(amount) {
 }
 
 function genericActivity() {
-    var txType = chance.pickone([
+    let txType = chance.pickone([
         javalon.TransactionType.NEW_ACCOUNT,
         // javalon.TransactionType.APPROVE_NODE_OWNER,
         // javalon.TransactionType.DISAPROVE_NODE_OWNER,
@@ -114,16 +111,16 @@ function genericActivity() {
         javalon.TransactionType.UNFOLLOW,
         // javalon.TransactionType.PROMOTED_COMMENT
     ])
-    var tx = {
+    let tx = {
         type: txType,
         data: {}
     }
-    var sender = chance.pickone(accounts)
+    let sender = chance.pickone(accounts)
     if (!sender) {
         console.log(accounts)
         throw 'bug'
     }
-    var ifConfirm = null
+    let ifConfirm = null
     switch (txType) {
     case javalon.TransactionType.NEW_ACCOUNT:
         tx.data.pub = master_pub
@@ -165,7 +162,7 @@ function genericActivity() {
             tx.data.pa = null
             tx.data.pp = null
         } else {
-            var parent = chance.pickone(contents)
+            let parent = chance.pickone(contents)
             tx.data.pa = parent.json.author
             tx.data.pp = parent.link
         }
@@ -200,7 +197,7 @@ function genericActivity() {
 
     case javalon.TransactionType.VOTE:
         if (contents.length === 0) return
-        var target = chance.weighted(contents, contents.map(x=>x.json.quality))
+        let target = chance.weighted(contents, contents.map(x=>x.json.quality))
         tx.data.author = target.json.author
         tx.data.link = target.link
         // tx.data.vp = Math.pow(2, chance.integer({min:0, max:15}))
@@ -223,7 +220,7 @@ function genericActivity() {
             console.log(err)
         else {
             successes++
-            var txps = successes/((new Date().getTime() - startTime)/1000)
+            let txps = successes/((new Date().getTime() - startTime)/1000)
             console.log('Acc: '+accounts.length+'\tMaxTPS: '+tpups*accounts.length+'\tTPS: '+txps)
         } 
     })

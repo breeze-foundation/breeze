@@ -1,6 +1,6 @@
 const series = require('run-series')
 
-var eco = {
+let eco = {
     currentBlock: {
         votes: {},
         voteCount: 0,
@@ -14,9 +14,9 @@ var eco = {
         }
     },
     accountPrice: (username) => {
-        var price = config.accountPriceMin
-        var extra = config.accountPriceBase - config.accountPriceMin
-        var mult = Math.pow(config.accountPriceChars / username.length, config.accountPriceCharMult)
+        let price = config.accountPriceMin
+        let extra = config.accountPriceBase - config.accountPriceMin
+        let mult = Math.pow(config.accountPriceChars / username.length, config.accountPriceCharMult)
         price += Math.round(extra*mult)
         return price
     },
