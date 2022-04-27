@@ -92,7 +92,7 @@ let chain = {
         return new Block(nextIndex, previousBlock.hash, nextTimestamp, txs, miner)
     },
     hashAndSignBlock: (block) => {
-        let nextHash = chain.calculateHash(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, block.distributed, block.burned)
+        let nextHash = chain.calculateHashForBlock(block)
         let signature = secp256k1.ecdsaSign(Buffer.from(nextHash, 'hex'), bs58.decode(process.env.NODE_OWNER_PRIV))
         signature = bs58.encode(signature.signature)
         return new Block(block._id, block.phash, block.timestamp, block.txs, block.miner, block.missedBy, signature, nextHash)
