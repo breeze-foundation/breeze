@@ -194,7 +194,7 @@ let config = {
         1282080: {
             hotfix1: true
         },
-        7000000: {
+        2666666: {
             blockHashSerialization: 2,
             bridgeFeeBp: 100,
         }
