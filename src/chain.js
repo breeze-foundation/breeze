@@ -54,8 +54,6 @@ let chain = {
             [],
             config.masterName,
             null,
-            null,
-            null,
             '0000000000000000000000000000000000000000000000000000000000000000',
             config.originHash
         )
