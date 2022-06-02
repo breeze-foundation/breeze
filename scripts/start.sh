@@ -21,7 +21,7 @@ export BLOCKS_DIR=
 # Enable more modules
 export NOTIFICATIONS=1
 export CONTENTS=1
-#export TX_HISTORY=1
+export TX_HISTORY=1
 
 # Cache warmup option
 export WARMUP_ACCOUNTS=100000
