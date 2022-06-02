@@ -54,16 +54,8 @@ sudo systemctl start mongod
 # Sync your Breeze node
 To sync your node to the mainnet, follow following steps
 
-First download the genesis block (block #0) and save it as `./genesis/genesis.zip`:
 
-```bash
-mkdir genesis
-cd genesis
-wget https://backup.breezechain.org/genesis.zip
-cd ..
-```
-
-Next, add some peers so you can connect to mainnet. 
+First, add some peers so you can connect to mainnet. (more peers on wtiness channel in discord)
 `nano scripts/start.sh` add near the bottom
 
 ```bash
