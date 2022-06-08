@@ -14,13 +14,20 @@ It is recommended to use either Debian 10 or Ubuntu 20.04.
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git wget tmux htop jq unzip
-git clone https://github.com/bestboom/breeze.git
+git clone https://github.com/breeze-foundation/breeze.git
 cd breeze/
 ```
 
 Install NodeJS + NPM
 ```bash
-sudo apt-get install nodejs npm
+sudo apt install npm
+sudo apt install nodejs
+```
+
+Check node version with `node -v`. Breeze runs with node v14 and v16 only. If older version is installed, then update it:
+```bash
+curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
+sudo apt install -y nodejs
 ```
 
 And install NPM modules that Breeze uses.
@@ -28,12 +35,6 @@ And install NPM modules that Breeze uses.
 npm install
 ```
 
-Check node version with `node -v`. Breeze runs with node v12 and v14 only. If needed, install NVM and install and use other node versions:
-```bash
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
-nvm install v14
-nvm use v14
-```
 Now install MongoDB:
 ```bash
 wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
@@ -55,7 +56,7 @@ sudo systemctl start mongod
 To sync your node to the mainnet, follow following steps
 
 
-First, add some peers so you can connect to mainnet. (more peers on wtiness channel in discord)
+First, add some peers so you can connect to mainnet. (more peers on wtiness channel in [discord](https://discord.gg/eMfdUbkYHu))
 `nano scripts/start.sh` add near the bottom
 
 ```bash
@@ -63,66 +64,57 @@ export PEERS=ws://167.71.199.111:6001,ws://5.161.53.104:6001
 export MAX_PEERS=20
 ```
 
+Next step is to specify the path to the folder containing `blocks.bson` file in `BLOCKS_DIR`, which is a read and append only file that stores all blocks.
+Define the path in `/scripts/start.sh` file.
+
+```bash
+export BLOCKS_DIR=/path/to/blocks/dir
+```
+
 Final step is to replay chain. 
 If your database has any data, wipe it. 
 You can wipe the mongodb by doing `mongo breeze` (assuming you are using the default 'breeze' db name) and then `db.dropDatabase()` once inside the mongo cli tool.
 
-
 ## 1- Natural replay
 This is the easiest method. Just start the node with `./scripts/start.sh` and you should see your node unzipping the genesis data, and then starting to download blocks from the peers. This method can be very slow, and probably not scalable in the long term.
 
-## 2- Replay from zipped blocks
-This is the fastest method that reverifies locally all the past blocks and transactions, and therefore the current blockchain state. You need to download a blocks.zip file into `./dump/blocks.zip`:
-```bash
-mkdir dump
-cd dump
-wget https://backup.breezechain.org/blocks.zip
-cd ..
-UNZIP_BLOCKS=1 REBUILD_STATE=1 ./scripts/start.sh
-```
-## 3- Replay from database snapshot
-This is the fastest method (takes <5 mins). You will download the latest hourly snapshot and import the data in your node, without any verification.
+## 2- Replay from blocks BSON file
+This is the fastest method that reverifies locally all the past blocks and transactions, and therefore the current blockchain state. You need to download the `blocks.bson` file into the folder specified in `BLOCKS_DIR` env var:
 
 ```bash
-mkdir dump
-cd dump
-wget https://backup.breezzechain.org/$(date +%H).tar.gz
-tar xfvz ./*
-mongorestore -d breeze ./
-cd ..
-rm -rf ./dump
-./scripts/start.sh
+cd /path/to/blocks/dir
+wget -c https://backup.breezechain.org/blocks.bson
 ```
 
-## Creating your own dumps for quick replays
-Alternatively, if you do not want to have to trust our backups (coming from breezechain.org domain), you can create your own:
+Now go back to main breeze directory and give permission to file `scripts/start.sh`
 
-First, shut-down your node to avoid any new incoming data contaminating your backup. Then just run:
+```bash
+cd breeze
+chmod +x scripts/start.sh
+REBUILD_STATE=1 ./scripts/start.sh
 ```
-mongodump -d breeze -o ~/dump/
-cd dump/breeze/
-zip -r blocks.zip .
-```
+
+A file named `blocks.index` will be constructed (if not already exists) which stores the pointers to each block in `blocks.bson`. This may take a few minutes.
+
 Finally restart node.
 
-##### If you want to start producing blocks on breeze, your account will need to define a witness key. Generate one into a file with `node src/cli key > witness-key.json`
+##### If you want to start producing blocks on breeze as a witness, your account will need to define a witness key. Generate one into a file with `node src/cli key > witness-key.json`
 
 Follow these simple steps to become witness
-* First enter your username, public witness key, and private witness key at the bottom of the `scripts/start.sh` file
-* Give permission to file
-```chmod +x scripts/start.sh```
-* Now start your node
+* First enter your username, public witness key, and private witness key near the bottom of the `scripts/start.sh` file
+
+* and then start your node
 ```./scripts/start.sh```
 
-* Now associate your public witness key with your account by using the on-chain transaction.
+* Next associate your public witness key with your account by using the on-chain transaction.
 ```bash
-node src/cli enable-node YOUR_WITNESS_PUB_KEY -M YOUR_USERNAME -K YOUR_KEY
+node src/cli enable-node YOUR_WITNESS_PUB_KEY -M YOUR_USERNAME -K YOUR_PRIVATE_KEY
 ```
-* Now approve your witness node
+* Next approve your witness node
 ```bash
 node src/cli vote-witness YOUR_WITNESS_USERNAME -M YOUR_USERNAME -K YOUR_KEY
 ```
-This transaction must be signed with your master key or a custom key that allows this transaction. Once this step is done, you can head to the [witness](https://besocial.ai/witnesses) and vote yourself.
+This transaction must be signed with your master key or a custom key that allows this transaction. Once this step is done, you can head to the [witness](https://tipmeacoffee.com/witnesses) and vote yourself.
 Once you get enough votes to be in top witnesses you will start producing blocks regularly and get rewarded for being a witness.
 
 * Finally announce your witnesses node in our social channels and tell users why they should upvote you as witness
