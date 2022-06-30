@@ -197,6 +197,10 @@ let config = {
         2666666: {
             blockHashSerialization: 2,
             bridgeFeeBp: 100,
+        },
+        4500000: {
+            witnesses: 9,
+            bridgeLimit: 1000000000
         }
     },
     read: (blockNum) => {

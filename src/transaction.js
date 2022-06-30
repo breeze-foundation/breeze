@@ -221,9 +221,15 @@ transaction = {
                 break
             }
 
-            // update both at the same time !
+            if (account.lastBridge)
+                for (let i in account.lastBridge)
+                    if (account.lastBridge[i].ts + 86400000 < ts)
+                        account.lastBridge.splice(i,1)
+
+            // update all at once
             let changes = {bw: bw}
             if (vp) changes.vp = vp
+            if (account.lastBridge) changes.lastBridge = account.lastBridge
             if (tx.type === TransactionType.VOTE) {
                 for (let i in account.recentVotes)
                     if (account.recentVotes[i] + config.ecoCurationCycle < ts)
