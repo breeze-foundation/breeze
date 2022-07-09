@@ -25,7 +25,7 @@ module.exports = {
                 for (let i in acc.lastBridge)
                     consumedLimit += acc.lastBridge[i].amount
             if (config.bridgeLimit && consumedLimit > config.bridgeLimit)
-                return cb(false,'24h bridge limit exceeded, currently '+(consumedLimit-tx.data.amount)+' used')
+                return cb(false,'Daily withdraw limit exceeds, you already withdraw '+((consumedLimit-tx.data.amount)/1000000))
             cb(true)
         })
     },
