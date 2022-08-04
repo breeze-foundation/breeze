@@ -1,10 +1,11 @@
-const version = '1.3.1'
+const version = '1.3.2'
 const default_port = 6001
 const replay_interval = 1500
 const discovery_interval = 60000
 const keep_alive_interval = 2500
 const max_blocks_buffer = 100
 const max_peers = process.env.MAX_PEERS || 15
+const max_recover_attempts = 25
 const history_interval = 10000
 const keep_history_for = 20000
 const p2p_port = process.env.P2P_PORT || default_port
@@ -34,6 +35,7 @@ let p2p = {
     recoveringBlocks: [],
     recoveredBlocks: [],
     recovering: false,
+    recoverAttempt: 0,
     nodeId: null,
     init: () => {
         p2p.generateNodeId()
@@ -270,6 +272,7 @@ let p2p = {
 
             case MessageType.BLOCK:
                 // a peer sends us a block we requested with QUERY_BLOCK
+                if (!message.d._id || !p2p.recoveringBlocks.includes(message.d._id)) return
                 for (let i = 0; i < p2p.recoveringBlocks.length; i++)
                     if (p2p.recoveringBlocks[i] === message.d._id) {
                         p2p.recoveringBlocks.splice(i, 1)
@@ -454,14 +457,27 @@ let p2p = {
     },
     addRecursive: (block) => {
         chain.validateAndAddBlock(block, true, function(err, newBlock) {
-            if (err)
-                logr.error('Error Replay', newBlock._id)
-            else {
+            if (err) {
+                // try another peer if bad block
+                cache.rollback()
+                p2p.recoveredBlocks = []
+                p2p.recoveringBlocks = []
+                p2p.recoverAttempt++
+                if (p2p.recoverAttempt > max_recover_attempts)
+                    logr.error('Error Replay', newBlock._id)
+                else {
+                    logr.warn('Recover attempt #'+p2p.recoverAttempt+' for block '+newBlock._id)
+                    p2p.recovering = chain.getLatestBlock()._id
+                    p2p.recover()
+                }
+            } else {
+                p2p.recoverAttempt = 0
                 delete p2p.recoveredBlocks[newBlock._id]
                 p2p.recover()
                 if (p2p.recoveredBlocks[chain.getLatestBlock()._id+1]) 
                     setTimeout(function() {
-                        p2p.addRecursive(p2p.recoveredBlocks[chain.getLatestBlock()._id+1])
+                        if (p2p.recoveredBlocks[chain.getLatestBlock()._id+1])
+                            p2p.addRecursive(p2p.recoveredBlocks[chain.getLatestBlock()._id+1])
                     }, 1)
             }     
         })
