@@ -202,6 +202,10 @@ let config = {
             witnesses: 9,
             witnessMaxVotes: 9,
             bridgeLimit: 1000000000
+        },
+        5422950: {
+            witnesses: 15,
+            witnessMaxVotes: 15
         }
     },
     read: (blockNum) => {
