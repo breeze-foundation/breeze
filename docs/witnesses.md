@@ -60,7 +60,7 @@ First, add some peers so you can connect to mainnet. (more peers on wtiness chan
 `nano scripts/start.sh` add near the bottom
 
 ```bash
-export PEERS=ws://144.126.142.1:6001,ws://75.119.135.167:6001,ws://135.181.133.50:6001
+export PEERS=ws://144.126.142.1:6001,ws://75.119.135.167:6001,ws://135.181.133.50:6001,ws://breeze.fso.ovh:6005,ws://5.161.53.104:6001,ws://149.102.147.171:6001,ws://5.161.54.51:6001,ws://144.126.129.118:6001
 export MAX_PEERS=20
 ```
 
