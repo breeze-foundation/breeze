@@ -123,7 +123,7 @@ let p2p = {
             let ws = new WebSocket(peer)
             ws.on('open', () => p2p.handshake(ws))
             ws.on('error', () => {
-                logr.warn('peer connection failed', peer)
+                // logr.warn('peer connection failed', peer)
             })
         })
     },
