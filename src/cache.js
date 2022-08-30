@@ -47,7 +47,7 @@ let cache = {
                 cache.removeWitness(cache.witnessChanges[i][0],true)
         cache.witnessChanges = []
     },
-    findOne: function(collection, query, cb) {
+    findOne: function(collection, query, cb, skipClone) {
         if (['accounts','blocks','contents','bridge'].indexOf(collection) === -1) {
             cb(true)
             return
@@ -55,8 +55,10 @@ let cache = {
         let key = cache.keyByCollection(collection)
         // searching in cache
         if (cache[collection][query[key]]) {
-            let res = cloneDeep(cache[collection][query[key]])
-            cb(null, res)
+            if (!skipClone)
+                cb(null, cloneDeep(cache[collection][query[key]]))
+            else
+                cb(null, cache[collection][query[key]])
             return
         }
         
@@ -72,8 +74,10 @@ let cache = {
                 cache[collection][obj[key]] = obj
 
                 // cloning the object before sending it
-                let res = cloneDeep(obj)
-                cb(null, res)
+                if (!skipClone)
+                    cb(null, cloneDeep(obj))
+                else
+                    cb(null, obj)
             }
         })
     },
@@ -85,7 +89,7 @@ let cache = {
             }
             let key = cache.keyByCollection(collection)
 
-            if (!cache.copy[collection][obj[key]])
+            if (!cache.copy[collection][obj[key]] && (!chain.restoredBlocks || chain.getLatestBlock()._id >= chain.restoredBlocks))
                 cache.copy[collection][obj[key]] = cloneDeep(cache[collection][obj[key]])
             
             for (let c in changes) 
@@ -146,7 +150,7 @@ let cache = {
                 changes: changes
             })
             cb(null, true)
-        })
+        }, true)
     },
     updateMany: function(collection, query, changes, cb) {
         let key = cache.keyByCollection(collection)

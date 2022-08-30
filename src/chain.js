@@ -354,17 +354,21 @@ let chain = {
     isValidMultisig: (account,threshold,allowedPubKeys,hash,signatures,cb) => {
         let validWeights = 0
         let validSigs = []
-        let hashBuf = Buffer.from(hash, 'hex')
-        for (let s = 0; s < signatures.length; s++) {
-            let signBuf = bs58.decode(signatures[s][0])
-            let recoveredPub = bs58.encode(secp256k1.ecdsaRecover(signBuf,signatures[s][1],hashBuf))
-            if (validSigs.includes(recoveredPub))
-                return cb(false, 'duplicate signatures found')
-            for (let p = 0; p < allowedPubKeys.length; p++)
-                if (allowedPubKeys[p][0] === recoveredPub) {
-                    validWeights += allowedPubKeys[p][1]
-                    validSigs.push(recoveredPub)
-                }
+        try {
+            let hashBuf = Buffer.from(hash, 'hex')
+            for (let s = 0; s < signatures.length; s++) {
+                let signBuf = bs58.decode(signatures[s][0])
+                let recoveredPub = bs58.encode(secp256k1.ecdsaRecover(signBuf,signatures[s][1],hashBuf))
+                if (validSigs.includes(recoveredPub))
+                    return cb(false, 'duplicate signatures found')
+                for (let p = 0; p < allowedPubKeys.length; p++)
+                    if (allowedPubKeys[p][0] === recoveredPub) {
+                        validWeights += allowedPubKeys[p][1]
+                        validSigs.push(recoveredPub)
+                    }
+            }
+        } catch (e) {
+            return cb(false, 'invalid signatures: ' + e.toString())
         }
         if (validWeights >= threshold)
             cb(account)
@@ -570,7 +574,7 @@ let chain = {
         let rand = parseInt('0x'+hash.substr(hash.length-config.witnessShufflePrecision))
         if (!p2p.recovering)
             logr.debug('Generating schedule... NRNG: ' + rand)
-        let miners = chain.generateWitnesses(true, config.witnesses, 0)
+        let miners = chain.generateWitnesses(true, false, config.witnesses, 0)
         miners = miners.sort(function(a,b) {
             if(a.name < b.name) return -1
             if(a.name > b.name) return 1
@@ -594,7 +598,7 @@ let chain = {
             shuffle: shuffledMiners
         }
     },
-    generateWitnesses: (withWitnessPub, limit, start) => {
+    generateWitnesses: (withWitnessPub, withWs, limit, start) => {
         let witnesses = []
         let witnessAccs = withWitnessPub ? cache.witnesses : cache.accounts
         for (const key in witnessAccs) {
@@ -602,16 +606,18 @@ let chain = {
                 continue
             if (withWitnessPub && !cache.accounts[key].pub_witness)
                 continue
-            let newWitness = cloneDeep(cache.accounts[key])
-            witnesses.push({
-                name: newWitness.name,
-                pub: newWitness.pub,
-                pub_witness: newWitness.pub_witness,
-                balance: newWitness.balance,
-                approves: newWitness.approves,
-                node_appr: newWitness.node_appr,
-                json: newWitness.json,
-            })
+            let witness = cache.accounts[key]
+            let witnessDetails = {
+                name: witness.name,
+                pub: witness.pub,
+                pub_witness: witness.pub_witness,
+                balance: witness.balance,
+                approves: witness.approves,
+                node_appr: witness.node_appr,
+            }
+            if (withWs && witness.json && witness.json.node && typeof witness.json.node.ws === 'string')
+                witnessDetails.ws = witness.json.node.ws
+            witnesses.push(witnessDetails)
         }
         witnesses = witnesses.sort(function(a,b) {
             return b.node_appr - a.node_appr
@@ -647,22 +653,21 @@ let chain = {
         return ((callback) => {
             cache.findOne('accounts', {name: miner}, (err, account) => {
                 let newBalance = account.balance + amount
+                let newBw = new GrowInt(account.bw, {growth:account.balance/(config.bwGrowth), max:config.bwMax}).grow(ts)
                 let newVt = new GrowInt(account.vp, {growth:account.balance/(config.vpGrowth)}).grow(ts)
-                if (!newVt)
+                if (!newVt || !newBw)
                     logr.debug('error growing grow int', account, ts)
                 
                 cache.updateOne('accounts',
                     {name: miner},
-                    {$set: { vp: newVt, balance: newBalance}},
+                    {$set: { vp: newVt, bw: newBw, balance: newBalance}},
                     function(err) {
                         if (err) throw err
-                        transaction.updateGrowInts(account, ts, function() {
-                            transaction.adjustNodeAppr(account, amount, function() {
-                                callback()
-                            })
+                        transaction.adjustNodeAppr(account, amount, function() {
+                            callback()
                         })
                     })
-            })
+            }, true)
         })
     },
     calculateHashForBlock: (block,deleteExisting) => {

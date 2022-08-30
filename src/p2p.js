@@ -1,4 +1,4 @@
-const version = '1.3.2'
+const version = '1.3.3'
 const default_port = 6001
 const replay_interval = 1500
 const discovery_interval = 60000
@@ -58,14 +58,14 @@ let p2p = {
         logr.info('P2P ID: '+p2p.nodeId.pub)
     },
     discoveryWorker: () => {
-        let witnesses = chain.generateWitnesses(false, config.witnesses*3, 0)
+        let witnesses = chain.generateWitnesses(false, true, config.witnesses*3, 0)
         for (let i = 0; i < witnesses.length; i++) {
             if (p2p.sockets.length >= max_peers) {
                 logr.debug('We already have maximum peers: '+p2p.sockets.length+'/'+max_peers)
                 break
             }
                 
-            if (witnesses[i].json && witnesses[i].json.node && witnesses[i].json.node.ws) {
+            if (witnesses[i].ws) {
                 let excluded = (process.env.DISCOVERY_EXCLUDE ? process.env.DISCOVERY_EXCLUDE.split(',') : [])
                 if (excluded.indexOf(witnesses[i].name) > -1)
                     continue
@@ -75,18 +75,18 @@ let p2p = {
                     if (ip.indexOf('::ffff:') > -1)
                         ip = ip.replace('::ffff:', '')
                     try {
-                        let witnessIp = witnesses[i].json.node.ws.split('://')[1].split(':')[0]
+                        let witnessIp = witnesses[i].ws.split('://')[1].split(':')[0]
                         if (witnessIp === ip) {
                             logr.trace('Already peered with '+witnesses[i].name)
                             isConnected = true
                         }
                     } catch (error) {
-                        logr.warn('Wrong json.node.ws for witness '+witnesses[i].name+' '+witnesses[i].json.node.ws, error)
+                        logr.warn('Wrong json.node.ws for witness '+witnesses[i].name+' '+witnesses[i].ws, error)
                     }
                 }
                 if (!isConnected) {
-                    logr.info('Trying to connect to '+witnesses[i].name+' '+witnesses[i].json.node.ws)
-                    p2p.connect([witnesses[i].json.node.ws])
+                    logr.debug('Trying to connect to '+witnesses[i].name+' '+witnesses[i].ws)
+                    p2p.connect([witnesses[i].ws])
                 }
             }
         }
