@@ -478,14 +478,17 @@ let chain = {
                 }
             }
                 
-
-        if (minerPriority === 0) {
+        // 6131346, 6131348
+        if (minerPriority === 0
+            && newBlock._id < 6131346 && newBlock._id > 6131348) {
             logr.error('unauthorized miner')
             cb(false); return
         }
 
+        // 6131357, 6131358
         // check if new block isnt too early
-        if (newBlock.timestamp - previousBlock.timestamp < minerPriority*config.blockTime) {
+        if (newBlock.timestamp - previousBlock.timestamp < minerPriority*config.blockTime
+            && newBlock._id < 6131357 && newBlock._id > 6131358) {
             logr.error('block too early for miner with priority #'+minerPriority)
             cb(false); return
         }
