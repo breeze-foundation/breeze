@@ -55,12 +55,13 @@ let eco = {
                 // author reward for post
                 let ad = Math.floor(config.ecoAuthorReward*eco.currentBlock.votes[a][l].length/eco.currentBlock.voteCount)
                 let cdt = 0
-                ops.push((callback) => cache.insertOne('distributed', {
-                    name: a,
-                    dist: ad,
-                    ts: ts,
-                    _id: a+'/'+l+'/'+ts+'/author'
-                },() => callback()))
+                if (process.env.DISTRIBUTED === '1')
+                    ops.push((callback) => cache.insertOne('distributed', {
+                        name: a,
+                        dist: ad,
+                        ts: ts,
+                        _id: a+'/'+l+'/'+ts+'/author'
+                    },() => callback()))
                 if (!dists[a])
                     dists[a] = ad
                 else
@@ -69,12 +70,13 @@ let eco = {
                 // curation reward for post
                 for (let v in eco.currentBlock.votes[a][l]) {
                     let cd = Math.floor(config.ecoCurationReward*eco.currentBlock.votes[a][l][v].vp/eco.currentBlock.vpCount)
-                    ops.push((callback) => cache.insertOne('distributed', {
-                        name: eco.currentBlock.votes[a][l][v].u,
-                        dist: cd,
-                        ts: ts,
-                        _id: a+'/'+l+'/'+eco.currentBlock.votes[a][l][v].u+'/curation'
-                    },() => callback()))
+                    if (process.env.DISTRIBUTED === '1')
+                        ops.push((callback) => cache.insertOne('distributed', {
+                            name: eco.currentBlock.votes[a][l][v].u,
+                            dist: cd,
+                            ts: ts,
+                            _id: a+'/'+l+'/'+eco.currentBlock.votes[a][l][v].u+'/curation'
+                        },() => callback()))
                     if (!dists[eco.currentBlock.votes[a][l][v].u])
                         dists[eco.currentBlock.votes[a][l][v].u] = cd
                     else
@@ -103,12 +105,13 @@ let eco = {
         for (let v in config.vaults)
             if (config.vaults[v].reward > 0 && v !== 'airdrop') {
                 ops.push(eco.incBalanceOp2(config.vaults[v].name,config.vaults[v].reward,ts))
-                ops.push((callback) => cache.insertOne('distributed', {
-                    name: config.vaults[v].name,
-                    dist: config.vaults[v].reward,
-                    ts: ts,
-                    _id: ts+'/'+v
-                },() => callback()))
+                if (process.env.DISTRIBUTED === '1')
+                    ops.push((callback) => cache.insertOne('distributed', {
+                        name: config.vaults[v].name,
+                        dist: config.vaults[v].reward,
+                        ts: ts,
+                        _id: ts+'/'+v
+                    },() => callback()))
             }
         if (ops.length > 0)
             series(ops,() => {
@@ -123,23 +126,23 @@ let eco = {
     incBalanceOp: (author,link,vote,username,amount,label) => {
         return (callback) => {
             logr.trace('increment',username,amount)
-            cache.updateOne('accounts', {name: username}, {$inc: {balance: amount}}, () => {
-                cache.insertOne('distributed', {
-                    name: username,
-                    dist: amount,
-                    ts: vote.ts,
-                    _id: author+'/'+link+'/'+vote.u+'/'+username+'/'+label
-                }, () => {
-                    cache.findOne('accounts', {name: username}, function(err, acc) {
-                        acc.balance -= amount
-                        transaction.updateGrowInts(acc, vote.ts, function() {
-                            transaction.adjustNodeAppr(acc, amount, function() {
+            cache.findOne('accounts', {name: username}, function(err, acc) {
+                transaction.updateGrowInts(acc, vote.ts, function() {
+                    transaction.adjustNodeAppr(acc, amount, function() {
+                        cache.updateOne('accounts', {name: username}, {$inc: {balance: amount}}, () => {
+                            if (process.env.DISTRIBUTED === '1')
+                                cache.insertOne('distributed', {
+                                    name: username,
+                                    dist: amount,
+                                    ts: vote.ts,
+                                    _id: author+'/'+link+'/'+vote.u+'/'+username+'/'+label
+                                }, () => callback())
+                            else
                                 callback()
-                            })
                         })
                     })
                 })
-            })
+            },true)
         }
     },
     incBalanceOp2: (username,amount,ts) => {
@@ -173,12 +176,15 @@ let eco = {
             cache.findOne('accounts', {name: author}, (err,authorAcc) => {
                 let refReceipient = authorAcc.ref ? authorAcc.ref : config.vaults.airdrop.name
                 let amt = Math.floor(ad*config.vaults.airdrop.reward/config.ecoAuthorReward)
-                cache.insertOne('distributed', {
-                    name: refReceipient,
-                    dist: amt,
-                    ts: ts,
-                    _id: author+'/'+link+'/'+ts+'/referral'
-                },() => eco.incBalanceOp2(refReceipient,amt,ts)(callback))
+                if (process.env.DISTRIBUTED === '1')
+                    cache.insertOne('distributed', {
+                        name: refReceipient,
+                        dist: amt,
+                        ts: ts,
+                        _id: author+'/'+link+'/'+ts+'/referral'
+                    },() => eco.incBalanceOp2(refReceipient,amt,ts)(callback))
+                else
+                    eco.incBalanceOp2(refReceipient,amt,ts)(callback)
             },true)
         }
     }
