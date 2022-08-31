@@ -145,16 +145,15 @@ let eco = {
     incBalanceOp2: (username,amount,ts) => {
         return (callback) => {
             logr.trace('increment2',username,amount)
-            cache.updateOne('accounts', {name: username}, {$inc: {balance: amount}}, () => {
-                cache.findOne('accounts', {name: username}, function(err, acc) {
-                    acc.balance -= amount
-                    transaction.updateGrowInts(acc, ts, function() {
-                        transaction.adjustNodeAppr(acc, amount, function() {
+            cache.findOne('accounts', {name: username}, function(err, acc) {
+                transaction.updateGrowInts(acc, ts, function() {
+                    transaction.adjustNodeAppr(acc, amount, function() {
+                        cache.updateOne('accounts', {name: username}, {$inc: {balance: amount}}, () => {
                             callback()
                         })
                     })
                 })
-            })
+            },true)
         }
     },
     referralReward: (author,link,vote) => {
@@ -165,7 +164,7 @@ let eco = {
                     eco.incBalanceOp(author,link,vote,authorAcc.ref,config.vaults.airdrop.reward,'airdrop')(callback)
                 else
                     eco.incBalanceOp(author,link,vote,config.vaults.airdrop.name,config.vaults.airdrop.reward,'airdrop')(callback)
-            })
+            },true)
         }
     },
     referralReward2: (author,link,ad,ts) => {
@@ -180,7 +179,7 @@ let eco = {
                     ts: ts,
                     _id: author+'/'+link+'/'+ts+'/referral'
                 },() => eco.incBalanceOp2(refReceipient,amt,ts)(callback))
-            })
+            },true)
         }
     }
 }
