@@ -53,6 +53,7 @@ let p2p = {
         }
         setInterval(function(){p2p.cleanRoundConfHistory()}, history_interval)
     },
+    getVersion: () => version,
     generateNodeId: () => {
         p2p.nodeId = chain.getNewKeyPair()
         logr.info('P2P ID: '+p2p.nodeId.pub)
