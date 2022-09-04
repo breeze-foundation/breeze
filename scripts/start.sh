@@ -19,9 +19,9 @@ export BLOCKS_DIR=
 #export DISCOVERY_EXCLUDE=breeze
 
 # Enable more modules
-export NOTIFICATIONS=1
 export CONTENTS=1
-export TX_HISTORY=1
+#export NOTIFICATIONS=1
+#export TX_HISTORY=1
 #export DISTRIBUTED=1
 
 # Cache warmup option
