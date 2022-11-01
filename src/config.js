@@ -206,6 +206,10 @@ let config = {
         5422950: {
             witnesses: 15,
             witnessMaxVotes: 15
+        },
+        8090145: {
+            witnesses: 21,
+            witnessMaxVotes: 21
         }
     },
     read: (blockNum) => {
