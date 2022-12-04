@@ -1,6 +1,6 @@
 {
   "name": "breeze",
-  "version": "1.3.4",
+  "version": "2.0.0",
   "description": "A blockchain for decentralized open source social media",
   "scripts": {
     "start": "node src/main.js",

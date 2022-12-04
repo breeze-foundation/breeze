@@ -51,6 +51,11 @@ module.exports = {
             cache.updateOne('contents', {_id: tx.data.author+'/'+tx.data.link}, {
                 $push: { votes: vote }
             },() => cb(true))
+        } else if (config.ecoVersion === 3) {
+            cache.updateOne('contents', {_id: tx.data.author+'/'+tx.data.link}, {
+                $push: { votes: vote },
+                $inc: { likes: 1 }
+            },() => cb(true))
         }
     }
 }

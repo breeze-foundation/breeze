@@ -210,6 +210,40 @@ let config = {
         8090145: {
             witnesses: 21,
             witnessMaxVotes: 21
+        },
+        9000000: {
+            ecoVersion: 3,
+            ecoAuthorReward: 18000,
+            ecoCurationReward: 0,
+            ecoAffiliateReward: 3000,
+            vaults: {
+                airdrop: {
+                    name: 'breeze-airdrop',
+                    reward: 12000
+                },
+                lpMining: {
+                    name: 'breeze-lpminer',
+                    reward: 45000
+                },
+                staking: {
+                    name: 'breeze-staker',
+                    reward: 30000
+                },
+                daf: {
+                    name: 'breeze-daf',
+                    reward: 3000
+                },
+                dao: {
+                    name: 'breeze-dao',
+                    reward: 15000
+                },
+                charity: {
+                    name: 'breeze-charity',
+                    reward: 1500
+                }
+            },
+            witnessReward: 22500,
+            witnessRewardBlocks: 1,
         }
     },
     read: (blockNum) => {

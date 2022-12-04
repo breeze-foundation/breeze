@@ -2,12 +2,14 @@ const series = require('run-series')
 
 let eco = {
     currentBlock: {
+        posts: [],
         votes: {},
         voteCount: 0,
         vpCount: 0
     },
     complete: () => {
         eco.currentBlock = {
+            posts: [],
             votes: {},
             voteCount: 0,
             vpCount: 0
@@ -44,6 +46,8 @@ let eco = {
     },
     curationv2: (ts,cb) => {
         // to be called once after executing all transactions in a block
+        if (config.ecoVersion === 3)
+            return eco.ecov3(ts,cb)
         if (config.ecoVersion !== 2 || eco.currentBlock.voteCount === 0)
             return cb()
         let dists = {}
@@ -122,6 +126,9 @@ let eco = {
             eco.complete()
             cb()
         }
+    },
+    ecov3: (ts,cb) => {
+
     },
     incBalanceOp: (author,link,vote,username,amount,label) => {
         return (callback) => {

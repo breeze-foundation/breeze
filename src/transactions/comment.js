@@ -67,6 +67,8 @@ module.exports = {
                     ts: ts
                 }
                 cache.insertOne('contents', newContent, function(){
+                    if (config.ecoVersion === 3)
+                        eco.currentBlock.posts.push(tx.sender+'/'+tx.data.link)
                     if (tx.data.pa && tx.data.pp && process.env.CONTENTS === '1') 
                         cache.updateOne('contents', {_id: tx.data.pa+'/'+tx.data.pp}, { $push: {
                             child: [tx.sender, tx.data.link]
