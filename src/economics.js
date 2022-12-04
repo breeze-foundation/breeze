@@ -149,7 +149,7 @@ let eco = {
             ops.push(eco.referralReward2(eco.currentBlock.posts[p].author,eco.currentBlock.posts[p].link,authorRewardEach,ts))
 
             // update post info
-            ops.push((callback) => cache.updateOne('contents',{_id:a+'/'+l},{ $inc: { dist: authorRewardEach }},() => callback()))
+            ops.push((callback) => cache.updateOne('contents',{_id:eco.currentBlock.posts[p].author+'/'+eco.currentBlock.posts[p].link},{ $inc: { dist: authorRewardEach }},() => callback()))
         }
         for (let d in dists)
             ops.push(eco.incBalanceOp2(d,dists[d],ts))
