@@ -128,7 +128,51 @@ let eco = {
         }
     },
     ecov3: (ts,cb) => {
+        let dists = {}
+        let ops = []
+        let authorRewardEach = Math.floor(config.ecoAuthorReward/eco.currentBlock.posts.length)
+        for (let p in eco.currentBlock.posts) {
+            // author reward
+            if (process.env.DISTRIBUTED === '1')
+                ops.push((callback) => cache.insertOne('distributed', {
+                    name: eco.currentBlock.posts[p].author,
+                    dist: authorRewardEach,
+                    ts: ts,
+                    _id: eco.currentBlock.posts[p].author+'/'+eco.currentBlock.posts[p].link+'/'+ts+'/author'
+                },() => callback()))
+            if (!dists[eco.currentBlock.posts[p].author])
+                dists[eco.currentBlock.posts[p].author] = authorRewardEach
+            else
+                dists[eco.currentBlock.posts[p].author] += authorRewardEach
 
+            // referral reward
+            ops.push(eco.referralReward2(eco.currentBlock.posts[p].author,eco.currentBlock.posts[p].link,authorRewardEach,ts))
+
+            // update post info
+            ops.push((callback) => cache.updateOne('contents',{_id:a+'/'+l},{ $inc: { dist: authorRewardEach }},() => callback()))
+        }
+        for (let d in dists)
+            ops.push(eco.incBalanceOp2(d,dists[d],ts))
+        for (let v in config.vaults)
+            if (config.vaults[v].reward > 0) {
+                ops.push(eco.incBalanceOp2(config.vaults[v].name,config.vaults[v].reward,ts))
+                if (process.env.DISTRIBUTED === '1')
+                    ops.push((callback) => cache.insertOne('distributed', {
+                        name: config.vaults[v].name,
+                        dist: config.vaults[v].reward,
+                        ts: ts,
+                        _id: ts+'/'+v
+                    },() => callback()))
+            }
+        if (ops.length > 0)
+            series(ops,() => {
+                eco.complete()
+                cb()
+            })
+        else {
+            eco.complete()
+            cb()
+        }
     },
     incBalanceOp: (author,link,vote,username,amount,label) => {
         return (callback) => {
@@ -182,7 +226,8 @@ let eco = {
         return (callback) => {
             cache.findOne('accounts', {name: author}, (err,authorAcc) => {
                 let refReceipient = authorAcc.ref ? authorAcc.ref : config.vaults.airdrop.name
-                let amt = Math.floor(ad*config.vaults.airdrop.reward/config.ecoAuthorReward)
+                let totalAff = config.ecoVersion < 3 ? config.vaults.airdrop.reward : config.ecoAffiliateReward
+                let amt = Math.floor(ad*totalAff/config.ecoAuthorReward)
                 if (process.env.DISTRIBUTED === '1')
                     cache.insertOne('distributed', {
                         name: refReceipient,
