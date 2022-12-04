@@ -3,7 +3,7 @@ module.exports = {
         // get new contents
         app.get('/new/:skip?', (req, res) => {
             let query = {$and:[{ pa: null }]}
-            let filter = { sort: { ts: -1 }, limit: 20 }
+            let filter = { sort: { ts: -1 }, limit: 40 }
             let skip = parseInt(req.params.skip)
             if (req.query.category)
                 query.$and.push({'json.category': req.query.category})
