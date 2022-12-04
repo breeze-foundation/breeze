@@ -628,11 +628,12 @@ let chain = {
         return witnesses.slice(start, limit)
     },
     witnessRewards: (name, ts, voteCount, cb) => {
+        if (config.ecoVersion === 3)
+            return chain.witnessRewardOp(name,ts,config.witnessReward)(cb)
+
         // rewards witnesses who produced in the last config.witnessRewardBlocks with config.witnessReward Token/producer
         if (voteCount <= 0)
             return cb(0)
-        if (config.ecoVersion === 3)
-            return chain.witnessRewardOp(name,ts,config.witnessReward)(cb)
         let reward = config.witnessReward
         let witnessRewardOp = []
         let witnessRewardReceipients = {}
