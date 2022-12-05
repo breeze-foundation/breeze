@@ -151,6 +151,8 @@ let eco = {
             // update post info
             ops.push((callback) => cache.updateOne('contents',{_id:eco.currentBlock.posts[p].author+'/'+eco.currentBlock.posts[p].link},{ $inc: { dist: authorRewardEach }},() => callback()))
         }
+        if (eco.currentBlock.posts.length === 0)
+            ops.push(eco.incBalanceOp2(config.vaults.airdrop.name,config.ecoAuthorReward+config.ecoAffiliateReward,ts))
         for (let d in dists)
             ops.push(eco.incBalanceOp2(d,dists[d],ts))
         for (let v in config.vaults)
