@@ -244,6 +244,35 @@ let config = {
             },
             witnessReward: 22500,
             witnessRewardBlocks: 1,
+        },
+        12500000: {
+            ecoAuthorReward: 7500,
+            vaults: {
+                airdrop: {
+                    name: 'breeze-airdrop',
+                    reward: 22500
+                },
+                lpMining: {
+                    name: 'breeze-lpminer',
+                    reward: 37500
+                },
+                staking: {
+                    name: 'breeze-staker',
+                    reward: 37500
+                },
+                daf: {
+                    name: 'breeze-daf',
+                    reward: 3000
+                },
+                dao: {
+                    name: 'breeze-dao',
+                    reward: 15000
+                },
+                charity: {
+                    name: 'breeze-charity',
+                    reward: 1500
+                }
+            }
         }
     },
     read: (blockNum) => {

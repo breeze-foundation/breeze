@@ -1,4 +1,4 @@
-const version = '2.0.0'
+const version = '2.1.0'
 const default_port = 6001
 const replay_interval = 1500
 const discovery_interval = 60000
