@@ -5,8 +5,8 @@ module.exports = {
             let query = {$and:[{ pa: null }]}
             let filter = { sort: { ts: -1 }, limit: 40 }
             let skip = parseInt(req.params.skip)
-            let fromTs = parseInt(req.params.from)
-            let toTs = parseInt(req.params.to)
+            let fromTs = parseInt(req.query.from)
+            let toTs = parseInt(req.query.to)
             if (req.query.category)
                 query.$and.push({'json.category': req.query.category})
             if (req.query.tag)
