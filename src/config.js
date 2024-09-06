@@ -273,6 +273,10 @@ let config = {
                     reward: 1500
                 }
             }
+        },
+        24879030: {
+            witnesses: 6,
+            witnessMaxVotes: 6
         }
     },
     read: (blockNum) => {
