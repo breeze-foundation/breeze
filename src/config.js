@@ -277,6 +277,10 @@ let config = {
         24879030: {
             witnesses: 6,
             witnessMaxVotes: 6
+        },
+        26448984: {
+            witnesses: 3,
+            witnessMaxVotes: 4
         }
     },
     read: (blockNum) => {
